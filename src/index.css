@@ -1,3 +1,27 @@
 body {
   margin: 0;
 }
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.makeStyles-popup-7 {
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+/* .makeStyles-popup-7::before {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  right: 50%;
+  transform: translateX(50%);
+  bottom: -8px;
+  border-style: solid;
+  border-width: 10px 10px 0 10px;
+  border-color: transparent;
+  border-top-color: white;
+} */
