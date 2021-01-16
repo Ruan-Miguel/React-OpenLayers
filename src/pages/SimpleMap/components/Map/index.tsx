@@ -14,49 +14,6 @@ import OverlayPositioning from "ol/OverlayPositioning";
 
 import "ol/ol.css";
 
-const view = new View({
-  center: [0, 0],
-  projection: "EPSG:4326",
-  zoom: 2,
-});
-
-const map = new Map({
-  layers: [
-    new TileLayer({
-      source: new OSM(),
-    }),
-  ],
-  view,
-});
-
-const accuracyFeature = new Feature();
-
-const positionFeature = new Feature({
-  name: "currentPosition",
-  message: "You are here",
-});
-positionFeature.setStyle(
-  new Style({
-    image: new CircleStyle({
-      radius: 8,
-      fill: new Fill({
-        color: "#3399CC",
-      }),
-      stroke: new Stroke({
-        color: "#fff",
-        width: 2,
-      }),
-    }),
-  })
-);
-
-const geolocation = new Geolocation({
-  trackingOptions: {
-    enableHighAccuracy: true,
-  },
-  projection: view.getProjection(),
-});
-
 const useStyles = makeStyles({
   mapStyle: {
     height: "100%",
@@ -89,44 +46,88 @@ function MapComponent({
   const classes = useStyles();
 
   const [popupContent, setPopupContent] = useState("");
-
   const [cursor, setCursor] = useState("default");
 
   const cursorSubstitute = useRef(cursor);
 
   const mapRef = useRef<HTMLDivElement>(null);
-
   const popupRef = useRef<HTMLDivElement>(null);
 
+  const olView = useRef<View>(
+    new View({
+      center: [0, 0],
+      projection: "EPSG:4326",
+      zoom: 2,
+    })
+  );
+
+  const olGeolocation = useRef<Geolocation>(
+    new Geolocation({
+      trackingOptions: {
+        enableHighAccuracy: true,
+      },
+      projection: olView.current.getProjection(),
+    })
+  );
+
   useEffect(() => {
-    geolocation.on("error", (err) => {
+    olGeolocation.current.on("error", (err) => {
       handleGeolocationError(err.message);
     });
   }, [handleGeolocationError]);
 
   useEffect(() => {
+    const map = new Map({
+      layers: [
+        new TileLayer({
+          source: new OSM(),
+        }),
+      ],
+      view: olView.current,
+    });
     map.setTarget(mapRef.current as HTMLDivElement);
 
-    geolocation.once("change:accuracyGeometry", () => {
-      accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
+    const positionFeature = new Feature({
+      name: "currentPosition",
+      message: "You are here",
+    });
+    positionFeature.setStyle(
+      new Style({
+        image: new CircleStyle({
+          radius: 8,
+          fill: new Fill({
+            color: "#3399CC",
+          }),
+          stroke: new Stroke({
+            color: "#fff",
+            width: 2,
+          }),
+        }),
+      })
+    );
+
+    const accuracyFeature = new Feature();
+
+    olGeolocation.current.once("change:accuracyGeometry", () => {
+      accuracyFeature.setGeometry(olGeolocation.current.getAccuracyGeometry());
     });
 
-    geolocation.once("change:position", () => {
-      const coordinates = geolocation.getPosition();
+    olGeolocation.current.once("change:position", () => {
+      const coordinates = olGeolocation.current.getPosition();
 
-      view.setCenter(coordinates);
-      view.setZoom(18);
+      olView.current.setCenter(coordinates);
+      olView.current.setZoom(18);
     });
 
-    geolocation.on("change:position", () => {
-      const coordinates = geolocation.getPosition();
+    olGeolocation.current.on("change:position", () => {
+      const coordinates = olGeolocation.current.getPosition();
 
       if (coordinates) {
         positionFeature.setGeometry(new Point(coordinates));
       }
     });
 
-    geolocation.setTracking(true);
+    olGeolocation.current.setTracking(true);
 
     // eslint-disable-next-line no-new
     new VectorLayer({
