@@ -47,7 +47,7 @@ export default function Header(): JSX.Element {
   const list = () => (
     <div className={classes.list} role="presentation">
       <List>
-        {["SimpleMap", "WfsExample"].map((text) => (
+        {["SimpleMap", "WfsExample", "WmsExample"].map((text) => (
           <ListItem
             button
             disabled={text === url}
